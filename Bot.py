@@ -11,9 +11,9 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from supabase import create_client, Client
 
 # --- Налаштування (замініть на власні дані) ---
-TELEGRAM_BOT_TOKEN = "ВАШ_ТОКЕН_БОТА"
-SUPABASE_URL = "https://ваш-проект.supabase.co"
-SUPABASE_KEY = "ВАШ_ANON_KEY"
+TELEGRAM_BOT_TOKEN = "8928232684:AAGKMPYyPDjrGoC-1jbYl0wZzLblujl27yA"
+SUPABASE_URL = "https://gczypvqctklayezlvdss.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjenlwdnFjdGtsYXllemx2ZHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODk5NzcsImV4cCI6MjEwODI2NTk3N30.ugrkQdj-trkn0a_WNbK78Z8DRLNuvgYDBLwnuW4KkJE"
 BANNER_URL = "https://i.imgur.com/your_banner_image.png"  # Посилання на банер бота
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
