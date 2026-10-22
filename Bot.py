@@ -9,6 +9,13 @@ BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8928232684:AAGKMPYyPDjrGoC-1jbYl0wZ
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://gczypvqctklayezlvdss.supabase.co")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjenlwdnFjdGtsYXllemx2ZHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODk5NzcsImV4cCI6MjEwODI2NTk3N30.ugrkQdj-trkn0a_WNbK78Z8DRLNuvgYDBLwnuW4KkJE")
 
+# СЮДА ВСТАВЛЯЙТЕ СВОИ ССЫЛКИ НА ОПЛАТУ ДЛЯ КАЖДОГО ТАРИФА:
+LINK_30_DAYS = "https://your-payment-link.com/30days"
+LINK_60_DAYS = "https://your-payment-link.com/60days"
+LINK_90_DAYS = "https://your-payment-link.com/90days"
+LINK_180_DAYS = "https://your-payment-link.com/180days"
+LINK_LIFETIME = "https://your-payment-link.com/lifetime"
+
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
@@ -22,14 +29,14 @@ def get_main_keyboard():
     ])
     return keyboard
 
-# Меню выбора тарифов (сроки и цены)
+# Меню выбора тарифов с вашими ссылками (перенаправляют на сайт оплаты)
 def get_tariffs_keyboard():
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="⏳ 30 дней — 200 грн (~$2)", url="ПОСИЛАННЯ_НА_ОПЛАТУ_ТУТ")],
-        [InlineKeyboardButton(text="⏳ 60 дней — $2.50", url="ПОСИЛАННЯ_НА_ОПЛАТУ_ТУТ")],
-        [InlineKeyboardButton(text="⏳ 90 дней — $3", url="ПОСИЛАННЯ_НА_ОПЛАТУ_ТУТ")],
-        [InlineKeyboardButton(text="⏳ 180 дней — $7", url="ПОСИЛАННЯ_НА_ОПЛАТУ_ТУТ")],
-        [InlineKeyboardButton(text="♾ Навсегда — $11", url="ПОСИЛАННЯ_НА_ОПЛАТУ_ТУТ")],
+        [InlineKeyboardButton(text="⏳ 30 дней — 200 грн (~$2)", url=LINK_30_DAYS)],
+        [InlineKeyboardButton(text="⏳ 60 дней — $2.50", url=LINK_60_DAYS)],
+        [InlineKeyboardButton(text="⏳ 90 дней — $3", url=LINK_90_DAYS)],
+        [InlineKeyboardButton(text="⏳ 180 дней — $7", url=LINK_180_DAYS)],
+        [InlineKeyboardButton(text="♾ Навсегда — $11", url=LINK_LIFETIME)],
         [InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_main")]
     ])
     return keyboard
@@ -46,9 +53,10 @@ async def cmd_start(message: types.Message):
 
 @dp.callback_query(F.data == "buy_menu")
 async def show_tariffs(callback: types.CallbackQuery):
+    # Отправляет новое сообщение (или редактирует старое) со списком тарифов
     await callback.message.edit_text(
         "🛒 **Выберите срок подписки для Zontas Visuals:**\n\n"
-        "Выберите нужный вариант ниже, чтобы перейти к оплате:",
+        "Нажмите на нужный тариф, чтобы перейти к оплате на сайте:",
         reply_markup=get_tariffs_keyboard(),
         parse_mode="Markdown"
     )
