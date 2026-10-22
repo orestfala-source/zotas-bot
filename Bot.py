@@ -1,115 +1,72 @@
-import asyncio
-import random
-import string
 import os
-from flask import Flask
-import threading
-
+import hashlib
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from supabase import create_client, Client
 
-# --- Налаштування (замініть на власні дані) ---
-TELEGRAM_BOT_TOKEN = "8928232684:AAGKMPYyPDjrGoC-1jbYl0wZzLblujl27yA"
-SUPABASE_URL = "https://gczypvqctklayezlvdss.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjenlwdnFjdGtsYXllemx2ZHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODk5NzcsImV4cCI6MjEwODI2NTk3N30.ugrkQdj-trkn0a_WNbK78Z8DRLNuvgYDBLwnuW4KkJE"
-BANNER_URL = "https://i.imgur.com/your_banner_image.png"  # Посилання на банер бота
+# Отримуємо змінні середовища (або можете вписати напряму для тесту)
+BOT_TOKEN = os.getenv("8928232684:AAGKMPYyPDjrGoC-1jbYl0wZzLblujl27yA")
+SUPABASE_URL = os.getenv("https://gczypvqctklayezlvdss.supabase.co")
+SUPABASE_KEY = os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjenlwdnFjdGtsYXllemx2ZHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODk5NzcsImV4cCI6MjEwODI2NTk3N30.ugrkQdj-trkn0a_WNbK78Z8DRLNuvgYDBLwnuW4KkJE")
 
-bot = Bot(token=TELEGRAM_BOT_TOKEN)
+bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
+
+# Підключення до Supabase
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# --- 🌐 Веб-сервер Flask для підтримки 24/7 онлайну ---
-app = Flask('')
-
-@app.route('/')
-def home():
-    return "Zotas Visual Bot is active 24/7!"
-
-def run_web_server():
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8080)))
-
-def keep_alive():
-    t = threading.Thread(target=run_web_server)
-    t.start()
-
-# --- 🔑 Генерація ключа ---
-def generate_key():
-    part1 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
-    part2 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
-    return f"ZOTAS-{part1}-{part2}"
-
-# --- 🎹 Клавіатура (Інтерфейс як на скріншоті) ---
-def main_keyboard():
+# Головне меню з кнопкою купівлі
+def get_main_keyboard():
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="💳 Купити підписку", callback_data="buy")],
-        [
-            InlineKeyboardButton(text="👤 Профіль", callback_data="profile"),
-            InlineKeyboardButton(text="💬 Підтримка", url="https://t.me/ваш_нік_підтримки")
-        ],
-        [
-            InlineKeyboardButton(text="📌 Мої ключі", callback_data="my_keys"),
-            InlineKeyboardButton(text="📜 Документи / Інструкція", callback_data="docs")
-        ]
+        [InlineKeyboardButton(text="💎 Купити підписку Zontas Visuals", callback_data="buy_menu")]
     ])
     return keyboard
 
-# --- 📩 Обробники команд та кнопок ---
+# Меню вибору тарифів (кількість днів та ціни)
+def get_tariffs_keyboard():
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="⏳ 30 днів — 200 грн (~$2)", url="ПОСИЛАННЯ_НА_ОПЛАТУ_ТУТ")],
+        [InlineKeyboardButton(text="⏳ 60 днів — $2.50", url="ПОСИЛАННЯ_НА_ОПЛАТУ_ТУТ")],
+        [InlineKeyboardButton(text="⏳ 90 днів — $3", url="ПОСИЛАННЯ_НА_ОПЛАТУ_ТУТ")],
+        [InlineKeyboardButton(text="⏳ 180 днів — $7", url="ПОСИЛАННЯ_НА_ОПЛАТУ_ТУТ")],
+        [InlineKeyboardButton(text="♾ Назавжди — $11", url="ПОСИЛАННЯ_НА_ОПЛАТУ_ТУТ")],
+        [InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_main")]
+    ])
+    return keyboard
+
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
-    caption_text = (
-        "💡 **Привіт! Ласкаво просимо в Zotas Visual.**\n\n"
-        "Оплачуючи підписку, ти отримуєш доступ до найкращих візуалів для Minecraft 1.21.4 Fabric."
-    )
-    
-    # Надсилання картинки-банера з кнопками
-    await message.answer_photo(
-        photo=BANNER_URL,
-        caption=caption_text,
-        reply_markup=main_keyboard(),
+    await message.answer(
+        "👋 Вітаємо у **Zontas Visuals**!\n\n"
+        "Це офіційний бот для купівлі та керування вашою ліцензією для моду.\n"
+        "Натисніть кнопку нижче, щоб обрати підписку:",
+        reply_markup=get_main_keyboard(),
         parse_mode="Markdown"
     )
 
-@dp.callback_query(F.data == "buy")
-async def process_buy(callback: types.CallbackQuery):
-    telegram_id = callback.from_user.id
-    new_key = generate_key()
-
-    # Запис у Supabase
-    supabase.table("licenses").insert({
-        "key": new_key,
-        "telegram_id": telegram_id,
-        "active": 1
-    }).execute()
-
-    await callback.message.answer(
-        f"✅ **Дякуємо за покупку!**\n\n"
-        f"🔑 Твій ліцензійний ключ:\n`{new_key}`\n\n"
-        f"Скопіюй його та введи при вході в майнкрафт.",
+@dp.callback_query(F.data == "buy_menu")
+async def show_tariffs(callback: types.CallbackQuery):
+    await callback.message.edit_text(
+        "🛒 **Оберіть термін підписки для Zontas Visuals:**\n\n"
+        "Оберіть потрібний варіант нижче, щоб перейти до оплати:",
+        reply_markup=get_tariffs_keyboard(),
         parse_mode="Markdown"
     )
     await callback.answer()
 
-@dp.callback_query(F.data == "profile")
-async def process_profile(callback: types.CallbackQuery):
-    user_id = callback.from_user.id
-    res = supabase.table("licenses").select("*").eq("telegram_id", user_id).execute()
-    keys_count = len(res.data)
-
-    await callback.message.answer(
-        f"👤 **Твій профіль:**\n\n"
-        f"🆔 Telegram ID: `{user_id}`\n"
-        f"🔑 Куплено ключів: {keys_count}",
+@dp.callback_query(F.data == "back_to_main")
+async def back_to_main(callback: types.CallbackQuery):
+    await callback.message.edit_text(
+        "👋 Вітаємо у **Zontas Visuals**!\n\n"
+        "Це офіційний бот для купівлі та керування вашою ліцензією для моду.\n"
+        "Натисніть кнопку нижче, щоб обрати підписку:",
+        reply_markup=get_main_keyboard(),
         parse_mode="Markdown"
     )
     await callback.answer()
-
-# --- 🚀 Запуск ---
-async def main():
-    keep_alive()  # Запускаємо фоновий веб-сервер
-    print("Бот запущений!")
-    await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    import asyncio
+    print("Бот запущено успішно!")
+    asyncio.run(dp.start_polling(bot))
